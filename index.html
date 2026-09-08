@@ -74,10 +74,14 @@
       transform: translateY(1px);
     }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-    .player { margin: 0 10px; padding: 12px 14px 11px; background: #101011; border: 1px solid #2f2f32; border-radius: 10px; overflow: hidden; }
+    .player {
+      display: grid; grid-template-areas: "controls" "embed"; grid-template-rows: 68px auto;
+      margin: 0 10px; padding: 11px 14px; background: #101011;
+      border: 1px solid #2f2f32; border-radius: 10px; overflow: hidden;
+    }
     .media-controls {
       display: grid; grid-template-columns: 34px 42px 34px; align-items: center;
-      justify-content: center; column-gap: 18px; margin: 1px 0 10px;
+      grid-area: controls; align-self: center; justify-content: center; column-gap: 18px; margin: 0;
     }
     .transport {
       display: inline-grid; place-items: center; flex: 0 0 auto; appearance: none;
@@ -117,7 +121,10 @@
       border-color: #4b3c33; background: linear-gradient(180deg, #332b27, #272220);
       box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%); color: #806858; cursor: default;
     }
-    .player-bottom { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-width: 0; }
+    .player-bottom {
+      display: flex; grid-area: controls; align-self: end; align-items: center;
+      justify-content: space-between; gap: 14px; min-width: 0;
+    }
     .volume { display: flex; flex: 0 1 180px; align-items: center; min-width: 72px; max-width: 180px; }
     .volume input { width: 100%; min-width: 0; margin: 0; accent-color: var(--accent); cursor: pointer; }
     .volume input:disabled { cursor: default; opacity: .45; }
@@ -126,7 +133,7 @@
     .stream-status { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
     .stream-status[hidden] { display: none; }
     .stream-status.is-error { color: #ef8c8c; }
-    .lofi-embed { height: 150px; margin-top: 10px; overflow: hidden; border-radius: 8px; background: #191919; }
+    .lofi-embed { grid-area: embed; height: 150px; margin-top: 10px; overflow: hidden; border-radius: 8px; background: #191919; }
     .lofi-embed[hidden] { display: none; }
     .lofi-embed iframe { width: 100%; height: 100%; display: block; border: 0; }
     .footer { display: flex; align-items: center; padding: 9px 14px 11px; }
