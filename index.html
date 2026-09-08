@@ -115,9 +115,7 @@
       let pendingVideoId = null;
       let wantsPlayback = false;
 
-      const pageOrigin = /^https?:$/.test(window.location.protocol)
-        ? window.location.origin
-        : '';
+      const playerOrigin = 'https://canerkli.github.io';
 
       const buildPlayerUrl = videoId => {
         const params = new URLSearchParams({
@@ -126,7 +124,7 @@
           playsinline: '1',
           rel: '0'
         });
-        if (pageOrigin) params.set('origin', pageOrigin);
+        params.set('origin', playerOrigin);
         return 'https://www.youtube.com/embed/' + encodeURIComponent(videoId)
           + '?' + params.toString();
       };
