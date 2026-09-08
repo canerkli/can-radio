@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="description" content="Yedi müzik istasyonu. Notion için sade bir radyo widget’ı.">
+  <title>Radio — Notion müzik widget’ı</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #191919;
+      color: #f0f0f2;
+      --accent: #d4ec8b;
+      --muted: #a6a6ad;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 12px; }
+    .radio {
+      width: 100%; max-width: 760px; margin-inline: auto;
+      background: #202022; border: 1px solid #353538; border-radius: 18px;
+      overflow: hidden;
+    }
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 17px 18px 13px;
+    }
+    h1 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -.02em; }
+    .mark { display: flex; align-items: center; gap: 3px; height: 19px; color: var(--accent); }
+    .mark i { width: 3px; border-radius: 2px; background: currentColor; height: 8px; }
+    .mark i:nth-child(2) { height: 17px; }
+    .mark i:nth-child(3) { height: 12px; }
+    .count { color: var(--muted); font-size: 12px; }
+    .stations {
+      display: flex; gap: 6px; overflow-x: auto;
+      padding: 2px 18px 14px; scrollbar-width: thin;
+      scrollbar-color: #56565b transparent;
+    }
+    .station {
+      flex: 0 0 auto; appearance: none; border: 1px solid #3c3c40;
+      border-radius: 9px; padding: 9px 12px; min-height: 40px;
+      background: #29292c; color: #c6c6cc; font: inherit;
+      font-size: 14px; font-weight: 550; cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .station:hover { background: #353539; color: #fff; }
+    .station[aria-pressed="true"] { background: var(--accent); color: #22291a; border-color: var(--accent); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .player { position: relative; margin: 0 14px; aspect-ratio: 16 / 9; background: #101011; border-radius: 10px; overflow: hidden; }
+    iframe { width: 100%; height: 100%; display: block; border: 0; }
+    .player-error {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      padding: 24px; background: #101011; color: #c6c6cc;
+      font-size: 14px; line-height: 1.5; text-align: center;
+    }
+    .player-error[hidden] { display: none; }
+    .footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px; padding: 14px 18px 16px; }
+    .now { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; margin: 0; font-size: 14px; }
+    .label { color: var(--muted); font-size: 12px; }
+    .now strong { font-weight: 600; }
+    .external { color: #b5b5bd; font-size: 12px; text-decoration: none; text-underline-offset: 3px; }
+    .external:hover { color: var(--accent); text-decoration: underline; }
+    .hint { padding: 0 18px 15px; margin: -3px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    noscript p { padding: 0 18px; color: var(--muted); font-size: 14px; }
+    @media (max-width: 420px) {
+      body { padding: 6px; }
+      .radio { border-radius: 13px; }
+      .header { padding: 14px 12px 11px; }
+      .stations { padding-inline: 12px; }
+      .player { margin-inline: 8px; border-radius: 7px; }
+      .footer { padding-inline: 12px; }
+      .hint { padding-inline: 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .station { transition: none; } }
+  </style>
+</head>
+<body>
+  <main class="radio" aria-label="Müzik radyosu">
+    <header class="header">
+      <h1><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Radio</h1>
+      <span class="count">7 istasyon</span>
+    </header>
+    <div class="stations" role="group" aria-label="İstasyon seç">
+      <button class="station" type="button" data-video="UZiKR5HHXTo" aria-pressed="true">Jazz</button>
+      <button class="station" type="button" data-video="rFZHOHl-L8A" aria-pressed="false">Lofi</button>
+      <button class="station" type="button" data-video="4xDzrJKXOOY" aria-pressed="false">Synthwave</button>
+      <button class="station" type="button" data-video="_wYENnYaboM" aria-pressed="false">90’lar Pop</button>
+      <button class="station" type="button" data-video="WnCfvAMM9eY" aria-pressed="false">70–80’ler</button>
+      <button class="station" type="button" data-video="jXAEIWcGXwE" aria-pressed="false">Classical</button>
+      <button class="station" type="button" data-video="S_MOd40zlYU" aria-pressed="false">Ambient</button>
+    </div>
+    <div class="player">
+      <!-- Initial load never autoplays. Native YouTube controls remain available. -->
+      <iframe id="player" title="Jazz — YouTube oynatıcı"
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <p class="player-error" id="player-error" role="status" hidden>Bu istasyon widget içinde oynatılamıyor. Aşağıdaki bağlantıyla YouTube’da açabilirsin.</p>
+    </div>
+    <footer class="footer">
+      <p class="now" aria-live="polite" aria-atomic="true"><span class="label" lang="en">Now Playing</span><strong id="station-name">Jazz</strong></p>
+      <a class="external" id="youtube-link" href="https://www.youtube.com/watch?v=UZiKR5HHXTo" target="_blank" rel="noopener noreferrer">YouTube’da aç ↗</a>
+    </footer>
+    <p class="hint">Bir istasyon seç veya oynat’a bas. Başlamazsa videodaki ▶ düğmesine dokun.</p>
+    <noscript><p>İstasyon değiştirmek için JavaScript’i etkinleştir. Jazz’ı yukarıdaki oynatıcıdan dinleyebilirsin.</p></noscript>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const playerFrame = document.getElementById('player');
+      const playerError = document.getElementById('player-error');
+      const name = document.getElementById('station-name');
+      const link = document.getElementById('youtube-link');
+      const buttons = [...document.querySelectorAll('.station')];
+      let selected = buttons[0];
+      let playerApi = null;
+      let pendingVideoId = null;
+      let wantsPlayback = false;
+
+      const pageOrigin = /^https?:$/.test(window.location.protocol)
+        ? window.location.origin
+        : '';
+
+      const buildPlayerUrl = videoId => {
+        const params = new URLSearchParams({
+          autoplay: '0',
+          enablejsapi: '1',
+          playsinline: '1',
+          rel: '0'
+        });
+        if (pageOrigin) params.set('origin', pageOrigin);
+        return 'https://www.youtube.com/embed/' + encodeURIComponent(videoId)
+          + '?' + params.toString();
+      };
+
+      // Set the referrer policy before the first YouTube navigation.
+      playerFrame.referrerPolicy = 'strict-origin-when-cross-origin';
+      playerFrame.src = buildPlayerUrl(selected.dataset.video);
+
+      window.onYouTubeIframeAPIReady = () => {
+        playerApi = new YT.Player(playerFrame, {
+          events: {
+            onReady: event => {
+              if (pendingVideoId && wantsPlayback) {
+                event.target.loadVideoById(pendingVideoId);
+                pendingVideoId = null;
+              }
+            },
+            onError: event => {
+              // 101 and 150 specifically mean the uploader disabled embedding.
+              if (event.data === 101 || event.data === 150) {
+                playerError.hidden = false;
+              }
+            }
+          }
+        });
+      };
+
+      const apiScript = document.createElement('script');
+      apiScript.src = 'https://www.youtube.com/iframe_api';
+      apiScript.async = true;
+      document.head.appendChild(apiScript);
+
+      buttons.forEach(button => {
+        button.addEventListener('click', event => {
+          // Only a real click, touch or keyboard activation can request autoplay.
+          if (!event.isTrusted) return;
+          selected = button;
+          wantsPlayback = true;
+          const title = button.textContent.trim();
+          const id = button.dataset.video;
+          buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+          name.textContent = title;
+          link.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(id);
+          playerFrame.title = title + ' — YouTube oynatıcı';
+          playerError.hidden = true;
+
+          if (playerApi && typeof playerApi.loadVideoById === 'function') {
+            playerApi.loadVideoById(id);
+          } else {
+            pendingVideoId = id;
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
