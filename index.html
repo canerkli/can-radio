@@ -97,6 +97,39 @@
 </head>
 <body>
   <main class="radio" aria-label="Müzik radyosu">
+    <section class="diagnostics" id="diagnostics" aria-labelledby="diagnostics-title" hidden>
+      <h2 id="diagnostics-title">YouTube Embed Diagnostics</h2>
+      <dl>
+        <dt>window.location.origin</dt><dd id="debug-origin"></dd>
+        <dt>Current page URL</dt><dd id="debug-url"></dd>
+        <dt>Top-level page</dt><dd id="debug-top-level"></dd>
+        <dt>document.referrer</dt><dd id="debug-referrer"></dd>
+        <dt>Third-party cookie access</dt><dd id="debug-third-party-cookies"></dd>
+        <dt>hasStorageAccess exists</dt><dd id="debug-has-storage-api"></dd>
+        <dt>hasStorageAccess() result</dt><dd id="debug-has-storage-result">pending</dd>
+        <dt>requestStorageAccess exists</dt><dd id="debug-request-storage-api"></dd>
+        <dt>Current iframe src</dt><dd id="debug-iframe-src"></dd>
+        <dt>Iframe referrerPolicy</dt><dd id="debug-referrer-policy"></dd>
+        <dt>Iframe sandbox</dt><dd id="debug-sandbox"></dd>
+        <dt>Iframe credentialless</dt><dd id="debug-credentialless"></dd>
+        <dt>Iframe allow</dt><dd id="debug-allow"></dd>
+        <dt>Player state</dt><dd id="debug-player-state">API not ready</dd>
+        <dt>Playback quality</dt><dd id="debug-quality">API not ready</dd>
+        <dt>Duration</dt><dd id="debug-duration">API not ready</dd>
+        <dt>Current time</dt><dd id="debug-current-time">API not ready</dd>
+        <dt>Video data</dt><dd id="debug-video-data">API not ready</dd>
+      </dl>
+      <h3>Minimal YouTube Embed Test</h3>
+      <div class="minimal-player">
+        <iframe id="minimal-player" title="Minimal YouTube Embed Test"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+      <p class="debug-note">These signals cannot directly prove YouTube login or Premium status. This page cannot read youtube.com cookies or iframe DOM.</p>
+      <button class="debug-button" id="debug-open-youtube" type="button">Open same video on YouTube</button>
+      <h3>Player API events</h3>
+      <pre class="debug-log" id="debug-log" aria-live="polite"></pre>
+    </section>
     <header class="header">
       <h1><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Radio</h1>
       <span class="count">7 istasyon</span>
@@ -121,39 +154,6 @@
       <p class="now" aria-live="polite" aria-atomic="true"><span class="label" lang="en">Now Playing</span><strong id="station-name">Jazz</strong></p>
       <a class="external" id="youtube-link" href="https://www.youtube.com/watch?v=UZiKR5HHXTo" target="_blank" rel="noopener noreferrer">YouTube’da aç ↗</a>
     </footer>
-    <section class="diagnostics" id="diagnostics" aria-labelledby="diagnostics-title" hidden>
-      <h2 id="diagnostics-title">YouTube Embed Diagnostics</h2>
-      <dl>
-        <dt>window.location.origin</dt><dd id="debug-origin"></dd>
-        <dt>Current page URL</dt><dd id="debug-url"></dd>
-        <dt>Top-level page</dt><dd id="debug-top-level"></dd>
-        <dt>document.referrer</dt><dd id="debug-referrer"></dd>
-        <dt>Third-party cookie access</dt><dd id="debug-third-party-cookies"></dd>
-        <dt>hasStorageAccess exists</dt><dd id="debug-has-storage-api"></dd>
-        <dt>hasStorageAccess() result</dt><dd id="debug-has-storage-result">pending</dd>
-        <dt>requestStorageAccess exists</dt><dd id="debug-request-storage-api"></dd>
-        <dt>Current iframe src</dt><dd id="debug-iframe-src"></dd>
-        <dt>Iframe referrerPolicy</dt><dd id="debug-referrer-policy"></dd>
-        <dt>Iframe sandbox</dt><dd id="debug-sandbox"></dd>
-        <dt>Iframe credentialless</dt><dd id="debug-credentialless"></dd>
-        <dt>Iframe allow</dt><dd id="debug-allow"></dd>
-        <dt>Player state</dt><dd id="debug-player-state">API not ready</dd>
-        <dt>Playback quality</dt><dd id="debug-quality">API not ready</dd>
-        <dt>Duration</dt><dd id="debug-duration">API not ready</dd>
-        <dt>Current time</dt><dd id="debug-current-time">API not ready</dd>
-        <dt>Video data</dt><dd id="debug-video-data">API not ready</dd>
-      </dl>
-      <p class="debug-note">These signals cannot directly prove YouTube login or Premium status. This page cannot read youtube.com cookies or iframe DOM.</p>
-      <button class="debug-button" id="debug-open-youtube" type="button">Open same video on YouTube</button>
-      <h3>Player API events</h3>
-      <pre class="debug-log" id="debug-log" aria-live="polite"></pre>
-      <h3>Minimal YouTube Embed Test</h3>
-      <div class="minimal-player">
-        <iframe id="minimal-player" title="Minimal YouTube Embed Test"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </div>
-    </section>
     <noscript><p>İstasyon değiştirmek için JavaScript’i etkinleştir. Jazz’ı yukarıdaki oynatıcıdan dinleyebilirsin.</p></noscript>
   </main>
   <script>
