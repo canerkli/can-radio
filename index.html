@@ -63,27 +63,6 @@
     .now strong { font-weight: 600; }
     .external { color: #b5b5bd; font-size: 12px; text-decoration: none; text-underline-offset: 3px; }
     .external:hover { color: var(--accent); text-decoration: underline; }
-    .diagnostics {
-      margin: 0 10px 10px; padding: 12px; border: 1px solid #45454a;
-      border-radius: 10px; background: #18181a; color: #d4d4d8;
-      font-size: 12px; line-height: 1.45;
-    }
-    .diagnostics[hidden] { display: none; }
-    .diagnostics h2 { margin: 0 0 9px; font-size: 14px; }
-    .diagnostics h3 { margin: 12px 0 7px; font-size: 13px; }
-    .diagnostics dl { display: grid; grid-template-columns: minmax(130px, .6fr) minmax(0, 1.4fr); gap: 5px 10px; margin: 0; }
-    .diagnostics dt { color: var(--muted); }
-    .diagnostics dd { margin: 0; overflow-wrap: anywhere; }
-    .debug-note { margin: 9px 0; color: var(--muted); }
-    .debug-button {
-      appearance: none; border: 1px solid #4b4b50; border-radius: 8px;
-      padding: 7px 10px; background: #29292c; color: #f0f0f2;
-      font: inherit; cursor: pointer;
-    }
-    .debug-button:hover { background: #353539; }
-    .debug-log { max-height: 180px; margin: 7px 0 0; padding: 9px; overflow: auto; border-radius: 7px; background: #101011; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .minimal-player { aspect-ratio: 16 / 9; overflow: hidden; border-radius: 8px; background: #101011; }
-    .minimal-player iframe { width: 100%; height: 100%; display: block; }
     noscript p { padding: 0 18px; color: var(--muted); font-size: 14px; }
     @media (max-width: 420px) {
       .radio { border-radius: 13px; }
@@ -97,39 +76,6 @@
 </head>
 <body>
   <main class="radio" aria-label="Müzik radyosu">
-    <section class="diagnostics" id="diagnostics" aria-labelledby="diagnostics-title" hidden>
-      <h2 id="diagnostics-title">YouTube Embed Diagnostics</h2>
-      <dl>
-        <dt>window.location.origin</dt><dd id="debug-origin"></dd>
-        <dt>Current page URL</dt><dd id="debug-url"></dd>
-        <dt>Top-level page</dt><dd id="debug-top-level"></dd>
-        <dt>document.referrer</dt><dd id="debug-referrer"></dd>
-        <dt>Third-party cookie access</dt><dd id="debug-third-party-cookies"></dd>
-        <dt>hasStorageAccess exists</dt><dd id="debug-has-storage-api"></dd>
-        <dt>hasStorageAccess() result</dt><dd id="debug-has-storage-result">pending</dd>
-        <dt>requestStorageAccess exists</dt><dd id="debug-request-storage-api"></dd>
-        <dt>Current iframe src</dt><dd id="debug-iframe-src"></dd>
-        <dt>Iframe referrerPolicy</dt><dd id="debug-referrer-policy"></dd>
-        <dt>Iframe sandbox</dt><dd id="debug-sandbox"></dd>
-        <dt>Iframe credentialless</dt><dd id="debug-credentialless"></dd>
-        <dt>Iframe allow</dt><dd id="debug-allow"></dd>
-        <dt>Player state</dt><dd id="debug-player-state">API not ready</dd>
-        <dt>Playback quality</dt><dd id="debug-quality">API not ready</dd>
-        <dt>Duration</dt><dd id="debug-duration">API not ready</dd>
-        <dt>Current time</dt><dd id="debug-current-time">API not ready</dd>
-        <dt>Video data</dt><dd id="debug-video-data">API not ready</dd>
-      </dl>
-      <h3>Minimal YouTube Embed Test</h3>
-      <div class="minimal-player">
-        <iframe id="minimal-player" title="Minimal YouTube Embed Test"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </div>
-      <p class="debug-note">These signals cannot directly prove YouTube login or Premium status. This page cannot read youtube.com cookies or iframe DOM.</p>
-      <button class="debug-button" id="debug-open-youtube" type="button">Open same video on YouTube</button>
-      <h3>Player API events</h3>
-      <pre class="debug-log" id="debug-log" aria-live="polite"></pre>
-    </section>
     <header class="header">
       <h1><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>Radio</h1>
       <span class="count">7 istasyon</span>
@@ -164,15 +110,10 @@
       const name = document.getElementById('station-name');
       const link = document.getElementById('youtube-link');
       const buttons = [...document.querySelectorAll('.station')];
-      const debugMode = new URLSearchParams(window.location.search).get('debug') === '1';
-      const diagnostics = document.getElementById('diagnostics');
-      const minimalFrame = document.getElementById('minimal-player');
-      const debugLog = document.getElementById('debug-log');
       let selected = buttons[0];
       let playerApi = null;
       let pendingVideoId = null;
       let wantsPlayback = false;
-      let telemetryTimer = null;
 
       const playerOrigin = 'https://canerkli.github.io';
 
@@ -188,116 +129,20 @@
           + '?' + params.toString();
       };
 
-      const buildMinimalPlayerUrl = videoId =>
-        'https://www.youtube.com/embed/' + encodeURIComponent(videoId)
-        + '?enablejsapi=1&origin=' + encodeURIComponent(playerOrigin);
-
-      const setDebugValue = (id, value) => {
-        if (!debugMode) return;
-        document.getElementById(id).textContent = String(value);
-      };
-
-      const appendDebugLog = (label, data) => {
-        if (!debugMode) return;
-        const detail = data === undefined ? '' : ' ' + JSON.stringify(data);
-        debugLog.textContent += '[' + new Date().toISOString() + '] ' + label + detail + '\n';
-        debugLog.scrollTop = debugLog.scrollHeight;
-      };
-
-      const playerStateName = state => ({
-        '-1': 'unstarted', 0: 'ended', 1: 'playing', 2: 'paused',
-        3: 'buffering', 5: 'cued'
-      })[state] ?? 'unknown (' + state + ')';
-
-      const updatePlayerTelemetry = () => {
-        if (!debugMode || !playerApi) return;
-        try {
-          setDebugValue('debug-player-state', playerStateName(playerApi.getPlayerState()));
-          setDebugValue('debug-quality', playerApi.getPlaybackQuality() || 'unavailable');
-          setDebugValue('debug-duration', playerApi.getDuration());
-          setDebugValue('debug-current-time', playerApi.getCurrentTime());
-          setDebugValue('debug-video-data', JSON.stringify(playerApi.getVideoData()));
-        } catch (error) {
-          appendDebugLog('telemetry read failed', { message: error.message });
-        }
-      };
-
-      const updateIframeDiagnostics = () => {
-        if (!debugMode) return;
-        setDebugValue('debug-iframe-src', playerFrame.src);
-        setDebugValue('debug-referrer-policy', playerFrame.referrerPolicy || '(empty)');
-        setDebugValue('debug-sandbox', playerFrame.getAttribute('sandbox') ?? 'none');
-        setDebugValue('debug-credentialless', 'credentialless' in playerFrame
-          ? String(Boolean(playerFrame.credentialless))
-          : 'unsupported');
-        setDebugValue('debug-allow', playerFrame.getAttribute('allow') || '(empty)');
-      };
-
-      const initializeDiagnostics = async () => {
-        if (!debugMode) return;
-        diagnostics.hidden = false;
-        setDebugValue('debug-origin', window.location.origin);
-        setDebugValue('debug-url', window.location.href);
-        setDebugValue('debug-top-level', window.top === window.self);
-        setDebugValue('debug-referrer', document.referrer || '(empty)');
-        setDebugValue('debug-third-party-cookies',
-          'Not directly detectable for youtube.com from this page; navigator.cookieEnabled=' + navigator.cookieEnabled);
-        setDebugValue('debug-has-storage-api', typeof document.hasStorageAccess === 'function');
-        setDebugValue('debug-request-storage-api', typeof document.requestStorageAccess === 'function');
-        updateIframeDiagnostics();
-
-        if (typeof document.hasStorageAccess === 'function') {
-          try {
-            setDebugValue('debug-has-storage-result', await document.hasStorageAccess());
-          } catch (error) {
-            setDebugValue('debug-has-storage-result', 'error: ' + error.message);
-          }
-        } else {
-          setDebugValue('debug-has-storage-result', 'unavailable');
-        }
-
-        document.getElementById('debug-open-youtube').addEventListener('click', () => {
-          window.open('https://www.youtube.com/watch?v=' + encodeURIComponent(selected.dataset.video), '_blank', 'noopener');
-        });
-      };
-
       // Set the referrer policy before the first YouTube navigation.
       playerFrame.referrerPolicy = 'strict-origin-when-cross-origin';
       playerFrame.src = buildPlayerUrl(selected.dataset.video);
-      if (debugMode) {
-        minimalFrame.referrerPolicy = 'strict-origin-when-cross-origin';
-        minimalFrame.src = buildMinimalPlayerUrl(selected.dataset.video);
-      }
-      initializeDiagnostics();
 
       window.onYouTubeIframeAPIReady = () => {
         playerApi = new YT.Player(playerFrame, {
           events: {
             onReady: event => {
-              appendDebugLog('onReady');
-              updatePlayerTelemetry();
-              if (debugMode && !telemetryTimer) {
-                telemetryTimer = window.setInterval(updatePlayerTelemetry, 1000);
-              }
               if (pendingVideoId && wantsPlayback) {
                 event.target.loadVideoById(pendingVideoId);
                 pendingVideoId = null;
               }
             },
-            onStateChange: event => {
-              appendDebugLog('onStateChange', {
-                state: event.data,
-                name: playerStateName(event.data),
-                videoData: event.target.getVideoData()
-              });
-              updatePlayerTelemetry();
-            },
             onError: event => {
-              appendDebugLog('onError', {
-                code: event.data,
-                videoData: event.target.getVideoData()
-              });
-              updatePlayerTelemetry();
               // 101 and 150 specifically mean the uploader disabled embedding.
               if (event.data === 101 || event.data === 150) {
                 playerError.hidden = false;
@@ -325,10 +170,6 @@
           link.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(id);
           playerFrame.title = title + ' — YouTube oynatıcı';
           playerError.hidden = true;
-          if (debugMode) {
-            minimalFrame.src = buildMinimalPlayerUrl(id);
-            updateIframeDiagnostics();
-          }
 
           if (playerApi && typeof playerApi.loadVideoById === 'function') {
             playerApi.loadVideoById(id);
